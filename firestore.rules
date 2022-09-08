@@ -1,0 +1,121 @@
+rules_version = '2';
+// Allow read/write access on all documents to any user signed in to the application
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /configurations/{configuration} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+     match /courses/{course} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /courseChapters/{chapter} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /notesCategories/{course} {
+      allow read, write: if request.auth != null;
+    }
+    match /notes/{note} {
+      allow read, write: if request.auth != null;
+    }
+    match /userNotes/{course} {
+      allow read, write: if request.auth != null;
+    }
+    match /videos/{video} {
+      allow read, write: if request.auth != null;
+    }
+      match /Questions/{question} {
+      allow read, write: if request.auth != null;
+    }
+      match /Answers/{answer} {
+      allow read, write: if request.auth != null;
+    }
+       match /chats/{chat} {
+      allow read, write: if request.auth != null;
+    }
+    match /messages/{message} {
+      allow read, write: if request.auth != null;
+    }
+     match /videoOverlays/{videoOverlay} {
+      allow read, write: if request.auth != null;
+    }
+     match /comments/{comment} {
+      allow read, write: if request.auth != null;
+    }
+     match /videoOverlays/{overlay} {
+      allow read, write: if request.auth != null;
+    }
+     match /transcriptInserts/{overlay} {
+      allow read, write: if request.auth != null;
+    }
+    match /transcriptFixes/{transcriptFixes} {
+      allow read, write: if request.auth != null;
+    }
+    match /userGroups/{userGroups} {
+      allow read, write: if request.auth != null;
+    }
+    match /users/{user} {
+      allow read: if hasReadPermission(database, user, 'users');
+      allow write: if hasWritePermission(database, user, 'users');
+      allow update: if hasUpdatePermission(database, user, 'users');
+      allow delete: if hasDeletePermission(database, user, 'users');
+    }
+    match /userInvites/{userInvites} {
+      allow read, write: if request.auth != null;
+    }
+    match /demoRequests/{demoRequests} {
+      allow write: if true;
+      allow read: if request.auth != null;
+    }
+    match /bookmarks/{bookmarks} {
+			allow read, write: if request.auth != null;
+    }
+    match /verifiedDemoUsers/{verifiedDemoUserId} {
+      allow write: if true;
+      allow read: if request.auth != null;
+    }
+    match /unVerifiedDemoUsers/{unVerifiedDemoUserId} {
+      allow write: if true;
+      allow read: if request.auth != null;
+    }
+    match /feedbackDetails/{detail} {
+      allow write: if true;
+      allow read: if request.auth != null;
+    }
+    match /examples/{example} {
+      allow write: if true;
+      allow read: if request.auth != null;
+    }
+    match /groups/{group} {
+      allow write: if true;
+      allow read: if request.auth != null;
+    }
+    match /tickets/{ticket} {
+      allow write: if true;
+      allow read: if request.auth != null;
+    }
+    match /notifications/{notification} {
+      allow write: if true;
+      allow read: if request.auth != null;
+    }
+  }
+}
+
+function hasReadPermission(database, userEmail, key) {
+    return get(/databases/$(database)/documents/users/$(userEmail)).data.featurePermissions.permissions[key].read == true;
+}
+
+function hasWritePermission(database, userEmail, key) {
+    return get(/databases/$(database)/documents/users/$(userEmail)).data.featurePermissions.permissions[key].create == true;
+}
+
+function hasUpdatePermission(database, userEmail, key) {
+    return get(/databases/$(database)/documents/users/$(userEmail)).data.featurePermissions.permissions[key].update == true;
+}
+
+function hasDeletePermission(database, userEmail, key) {
+    return get(/databases/$(database)/documents/users/$(userEmail)).data.featurePermissions.permissions[key].delete == true;
+}
+
