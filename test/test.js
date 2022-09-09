@@ -9,8 +9,20 @@ const theirId = "other@elgia.com";
 const myEmail = "test@elgia.com"
 const myAuth = {
     uid: myEmail,
-    email: myEmail
+    email: myEmail,
+    custom: {
+        token: {
+            email: myEmail,
+            sub: myEmail,
+        }
+    }
 };
+
+beforeEach(async() => {
+    const mockEnv = await getTestEnv();
+    // mockEnv.cleanup()
+    await mockEnv.clearFirestore()
+});
 
 async function getTestEnv() {
     const testEnv = await initializeTestEnvironment({
@@ -34,9 +46,15 @@ async function createTestUser() {
             name: 'nameless',
             featurePermissions: {
                 permissions: {
-                    users: {
+                    admin: {
                         read: true,
                         create: false,
+                        update: true,
+                        delete: true,
+                    },
+                    users: {
+                        read: true,
+                        create: true,
                         update: true,
                         delete: true,
                     }
@@ -45,12 +63,6 @@ async function createTestUser() {
         });
     });
 }
-
-beforeEach(async() => {
-    const mockEnv = await getTestEnv();
-    // mockEnv.cleanup()
-    await mockEnv.clearFirestore()
-});
 
 describe("Alinkeo Firestore Rules:", () => {
     it("understands basic arithmetic", () => {
@@ -66,7 +78,7 @@ describe("Alinkeo Firestore Rules:", () => {
     it("authenticated user CAN read a document in users collection", async() => {
         await createTestUser();
         const mockEnv = await getTestEnv();
-        const context = mockEnv.authenticatedContext(myAuth);
+        const context = mockEnv.authenticatedContext(myAuth.uid, myAuth.custom);
         return await assertSucceeds(getDoc(doc(context.firestore(), "users", myAuth.uid)));
     });
 
