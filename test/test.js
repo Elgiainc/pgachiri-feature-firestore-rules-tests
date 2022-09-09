@@ -18,6 +18,8 @@ const myAuth = {
     }
 };
 
+const collections = ['admin', 'users', 'groups', 'comments', 'courses'];
+
 beforeEach(async() => {
     const mockEnv = await getTestEnv();
     // mockEnv.cleanup()
@@ -36,35 +38,35 @@ async function getTestEnv() {
     return testEnv;
 }
 
+function defaultPermissions(collections) {
+    let permissions = {};
+    collections.forEach((permission) => {
+        permissions[permission] = {
+            create: true,
+            read: true,
+            update: true,
+            delete: true,
+        }
+    })
+    return permissions;
+}
+
 async function createTestUser() {
     const mockEnv = await getTestEnv();
     return await mockEnv.withSecurityRulesDisabled(async(context) => {
         const testdoc = context.firestore().collection('users').doc(myAuth.uid);
-        await setDoc(testdoc, {
+        const permissions = defaultPermissions(collections);
+        const user = {
             id: myAuth.uid,
             email: myAuth.email,
             name: 'nameless',
             featurePermissions: {
-                permissions: {
-                    admin: {
-                        read: false,
-                        create: false,
-                        update: true,
-                        delete: true,
-                    },
-                    users: {
-                        read: true,
-                        create: true,
-                        update: true,
-                        delete: true,
-                    }
-                }
+                permissions
             }
-        });
+        }
+        await setDoc(testdoc, user);
     });
 }
-
-const collections = ['users', 'groups', 'comments', 'courses'];
 
 describe("Alinkeo Firestore Rules:", () => {
     it("understands basic arithmetic", () => {
@@ -103,14 +105,6 @@ describe("Alinkeo Firestore Rules:", () => {
             return await assertFails(setDoc(testDoc, { name: 'test name' }));
         });
     });
-
-    // it("can a read or write to a document in users collection happen with firestore rules disabled", async() => {
-    //     const mockEnv = await getTestEnv();
-    //     return await mockEnv.withSecurityRulesDisabled(async(context) => {
-    //         const testdoc = context.firestore().collection('users').doc(myAuth.uid);
-    //         await setDoc(testdoc, { test: 'test name' });
-    //     });
-    // });
 });
 
 after(async() => {
