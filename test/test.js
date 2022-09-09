@@ -47,7 +47,7 @@ async function createTestUser() {
             featurePermissions: {
                 permissions: {
                     admin: {
-                        read: true,
+                        read: false,
                         create: false,
                         update: true,
                         delete: true,
@@ -83,8 +83,9 @@ describe("Alinkeo Firestore Rules:", () => {
     });
 
     it("authenticated user CAN set a document in users collection", async() => {
+        await createTestUser();
         const mockEnv = await getTestEnv();
-        const context = mockEnv.authenticatedContext(myAuth);
+        const context = mockEnv.authenticatedContext(myAuth.uid, myAuth.custom);
         const testDoc = context.firestore().collection('users').doc(myAuth.uid);
 
         return await assertSucceeds(setDoc(testDoc, { name: 'test name' }));

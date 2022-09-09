@@ -60,10 +60,10 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
     match /users/{user} {
-      allow read: if hasReadPermission(request, database, 'users');
-      allow write: if hasWritePermission(request, database, 'users');
-      allow update: if hasUpdatePermission(request, database, 'users');
-      allow delete: if hasDeletePermission(request, database, 'users');
+      allow read: if isAdmin(request, database) || hasReadPermission(request, database, 'users');
+      allow write: if isAdmin(request, database) || hasWritePermission(request, database, 'users');
+      allow update: if isAdmin(request, database) || hasUpdatePermission(request, database, 'users');
+      allow delete: if isAdmin(request, database) || hasDeletePermission(request, database, 'users');
     }
     match /userInvites/{userInvites} {
       allow read, write: if request.auth != null;
@@ -126,4 +126,9 @@ function emailConfirmed(request) {
     return request.auth != null && request.auth.uid.matches('^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$');
 }
 
-
+function isAdmin(request, database) {
+  return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.featurePermissions.permissions.admin.read == true
+  && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.featurePermissions.permissions.admin.create == true
+  && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.featurePermissions.permissions.admin.update == true
+  && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.featurePermissions.permissions.admin.delete == true
+}
