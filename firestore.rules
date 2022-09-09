@@ -7,33 +7,50 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
      match /courses/{course} {
-      allow read: if true;
-      allow write: if request.auth != null;
+      allow read: if isAdmin(request, database) || hasReadPermission(request.auth, database, 'courses');
+      allow write: if isAdmin(request, database) || hasWritePermission(request.auth, database, 'courses');
+      allow update: if isAdmin(request, database) || hasUpdatePermission(request.auth, database, 'courses');
+      allow delete: if isAdmin(request, database) || hasDeletePermission(request.auth, database, 'courses');
     }
     match /courseChapters/{chapter} {
       allow read: if true;
       allow write: if request.auth != null;
     }
-    match /notesCategories/{course} {
-      allow read, write: if request.auth != null;
+    match /notesCategories/{category} {
+      allow read: if isAdmin(request, database) || hasReadPermission(request.auth, database, 'notes');
+      allow write: if isAdmin(request, database) || hasWritePermission(request.auth, database, 'notes');
+      allow update: if isAdmin(request, database) || hasUpdatePermission(request.auth, database, 'notes');
+      allow delete: if isAdmin(request, database) || hasDeletePermission(request.auth, database, 'notes');
     }
     match /notes/{note} {
-      allow read, write: if request.auth != null;
+      allow read: if isAdmin(request, database) || hasReadPermission(request.auth, database, 'notes');
+      allow write: if isAdmin(request, database) || hasWritePermission(request.auth, database, 'notes');
+      allow update: if isAdmin(request, database) || hasUpdatePermission(request.auth, database, 'notes');
+      allow delete: if isAdmin(request, database) || hasDeletePermission(request.auth, database, 'notes');
     }
-    match /userNotes/{course} {
-      allow read, write: if request.auth != null;
+    match /userNotes/{note} {
+      allow read: if isAdmin(request, database) || hasReadPermission(request.auth, database, 'notes');
+      allow write: if isAdmin(request, database) || hasWritePermission(request.auth, database, 'notes');
+      allow update: if isAdmin(request, database) || hasUpdatePermission(request.auth, database, 'notes');
+      allow delete: if isAdmin(request, database) || hasDeletePermission(request.auth, database, 'notes');
     }
     match /videos/{video} {
-      allow read: if hasReadPermission(request.auth, database, 'videos') || resource.data.uploadedBy == request.auth.uid;
-      allow write: if hasWritePermission(request.auth, database, 'videos');
-      allow update: if hasUpdatePermission(request.auth, database, 'videos');
-      allow delete: if hasDeletePermission(request.auth, database, 'videos');
+      allow read: if isAdmin(request, database) || hasReadPermission(request.auth, database, 'videos') || resource.data.uploadedBy == request.auth.uid;
+      allow write: if isAdmin(request, database) || hasWritePermission(request.auth, database, 'videos');
+      allow update: if isAdmin(request, database) || hasUpdatePermission(request.auth, database, 'videos');
+      allow delete: if isAdmin(request, database) || hasDeletePermission(request.auth, database, 'videos');
     }
       match /Questions/{question} {
-      allow read, write: if request.auth != null;
+      allow read: if isAdmin(request, database) || hasReadPermission(request.auth, database, 'questions');
+      allow write: if isAdmin(request, database) || hasWritePermission(request.auth, database, 'questions');
+      allow update: if isAdmin(request, database) || hasUpdatePermission(request.auth, database, 'questions');
+      allow delete: if isAdmin(request, database) || hasDeletePermission(request.auth, database, 'questions');
     }
       match /Answers/{answer} {
-      allow read, write: if request.auth != null;
+      allow read: if isAdmin(request, database) || hasReadPermission(request.auth, database, 'questions');
+      allow write: if isAdmin(request, database) || hasWritePermission(request.auth, database, 'questions');
+      allow update: if isAdmin(request, database) || hasUpdatePermission(request.auth, database, 'questions');
+      allow delete: if isAdmin(request, database) || hasDeletePermission(request.auth, database, 'questions');
     }
        match /chats/{chat} {
       allow read, write: if request.auth != null;
@@ -45,7 +62,10 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
      match /comments/{comment} {
-      allow read, write: if request.auth != null;
+      allow read: if isAdmin(request, database) || hasReadPermission(request.auth, database, 'comments');
+      allow write: if isAdmin(request, database) || hasWritePermission(request.auth, database, 'comments');
+      allow update: if isAdmin(request, database) || hasUpdatePermission(request.auth, database, 'comments');
+      allow delete: if isAdmin(request, database) || hasDeletePermission(request.auth, database, 'comments');
     }
      match /videoOverlays/{overlay} {
       allow read, write: if request.auth != null;
@@ -61,8 +81,8 @@ service cloud.firestore {
     }
     match /users/{user} {
       allow read: if isAdmin(request, database) || hasReadPermission(request, database, 'users');
-      allow write: if isAdmin(request, database) || hasWritePermission(request, database, 'users');
-      allow update: if isAdmin(request, database) || hasUpdatePermission(request, database, 'users');
+      allow write: if isAdmin(request, database) || hasWritePermission(request, database, 'users') && userDataValidated(request);
+      allow update: if isAdmin(request, database) || hasUpdatePermission(request, database, 'users') && userDataValidated(request);
       allow delete: if isAdmin(request, database) || hasDeletePermission(request, database, 'users');
     }
     match /userInvites/{userInvites} {
@@ -92,12 +112,16 @@ service cloud.firestore {
       allow read: if request.auth != null;
     }
     match /groups/{group} {
-      allow write: if true;
-      allow read: if request.auth != null;
+      allow read: if isAdmin(request, database) || hasReadPermission(request.auth, database, 'groups');
+      allow write: if isAdmin(request, database) || hasWritePermission(request.auth, database, 'groups');
+      allow update: if isAdmin(request, database) || hasUpdatePermission(request.auth, database, 'groups');
+      allow delete: if isAdmin(request, database) || hasDeletePermission(request.auth, database, 'groups');
     }
     match /tickets/{ticket} {
-      allow write: if true;
-      allow read: if request.auth != null;
+      allow read: if isAdmin(request, database) || hasReadPermission(request.auth, database, 'tickets');
+      allow write: if isAdmin(request, database) || hasWritePermission(request.auth, database, 'tickets');
+      allow update: if isAdmin(request, database) || hasUpdatePermission(request.auth, database, 'tickets');
+      allow delete: if isAdmin(request, database) || hasDeletePermission(request.auth, database, 'tickets');
     }
     match /notifications/{notification} {
       allow write: if true;
@@ -132,3 +156,8 @@ function isAdmin(request, database) {
   && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.featurePermissions.permissions.admin.update == true
   && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.featurePermissions.permissions.admin.delete == true
 }
+
+function userDataValidated(request) {
+  return request.resource.data.keys().hasAll(['id', 'name', 'email', 'active', 'groups', 'courses', 'createdAt']);
+}
+

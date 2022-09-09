@@ -64,49 +64,53 @@ async function createTestUser() {
     });
 }
 
+const collections = ['users', 'groups', 'comments', 'courses'];
+
 describe("Alinkeo Firestore Rules:", () => {
     it("understands basic arithmetic", () => {
         assert.equal(2 + 2, 4);
     });
 
-    it("UNauthenticated user CANNOT read a document in users collection", async() => {
-        const mockEnv = await getTestEnv();
-        const context = mockEnv.unauthenticatedContext();
-        return await assertFails(getDoc(doc(context.firestore(), "users", "alice")));
-    });
+    collections.map((collection) => {
+        it(`UNauthenticated user CANNOT read a document in ${collection} collection`, async() => {
+            const mockEnv = await getTestEnv();
+            const context = mockEnv.unauthenticatedContext();
+            return await assertFails(getDoc(doc(context.firestore(), collection, myAuth.uid)));
+        });
 
-    it("authenticated user CAN read a document in users collection", async() => {
-        await createTestUser();
-        const mockEnv = await getTestEnv();
-        const context = mockEnv.authenticatedContext(myAuth.uid, myAuth.custom);
-        return await assertSucceeds(getDoc(doc(context.firestore(), "users", myAuth.uid)));
-    });
+        it(`authenticated user CAN read a document in ${collection} collection`, async() => {
+            await createTestUser();
+            const mockEnv = await getTestEnv();
+            const context = mockEnv.authenticatedContext(myAuth.uid, myAuth.custom);
+            return await assertSucceeds(getDoc(doc(context.firestore(), collection, myAuth.uid)));
+        });
 
-    it("authenticated user CAN set a document in users collection", async() => {
-        await createTestUser();
-        const mockEnv = await getTestEnv();
-        const context = mockEnv.authenticatedContext(myAuth.uid, myAuth.custom);
-        const testDoc = context.firestore().collection('users').doc(myAuth.uid);
+        it(`authenticated user CAN set a document in ${collection} collection`, async() => {
+            await createTestUser();
+            const mockEnv = await getTestEnv();
+            const context = mockEnv.authenticatedContext(myAuth.uid, myAuth.custom);
+            const testDoc = context.firestore().collection(collection).doc(myAuth.uid);
 
-        return await assertSucceeds(setDoc(testDoc, { name: 'test name' }));
-    });
+            return await assertSucceeds(setDoc(testDoc, { id: myAuth.uid, name: 'test name', email: myAuth.email, active: true, groups: [], courses: [], createdAt: '' }));
+        });
 
 
-    it("UNauthenticated user CANNOT set a document in users collection", async() => {
-        const mockEnv = await getTestEnv();
-        const context = mockEnv.unauthenticatedContext();
-        const testDoc = context.firestore().collection('users').doc(myAuth.uid);
+        it(`UNauthenticated user CANNOT set a document in ${collection} collection`, async() => {
+            const mockEnv = await getTestEnv();
+            const context = mockEnv.unauthenticatedContext();
+            const testDoc = context.firestore().collection(collection).doc(myAuth.uid);
 
-        return await assertFails(setDoc(testDoc, { name: 'test name' }));
-    });
-
-    it("can a read or write to a document in users collection happen with firestore rules disabled", async() => {
-        const mockEnv = await getTestEnv();
-        return await mockEnv.withSecurityRulesDisabled(async(context) => {
-            const testdoc = context.firestore().collection('users').doc(myAuth.uid);
-            await setDoc(testdoc, { test: 'test name' });
+            return await assertFails(setDoc(testDoc, { name: 'test name' }));
         });
     });
+
+    // it("can a read or write to a document in users collection happen with firestore rules disabled", async() => {
+    //     const mockEnv = await getTestEnv();
+    //     return await mockEnv.withSecurityRulesDisabled(async(context) => {
+    //         const testdoc = context.firestore().collection('users').doc(myAuth.uid);
+    //         await setDoc(testdoc, { test: 'test name' });
+    //     });
+    // });
 });
 
 after(async() => {
