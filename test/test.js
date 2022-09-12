@@ -18,7 +18,8 @@ const myAuth = {
     }
 };
 
-const collections = ['admin', 'users', 'groups', 'comments', 'courses'];
+const collections = ['users', 'userGroups', 'comments', 'courses'];
+const permissionKeys = ['admin', 'users', 'groups', 'comments', 'courses'];
 
 beforeEach(async() => {
     const mockEnv = await getTestEnv();
@@ -38,9 +39,9 @@ async function getTestEnv() {
     return testEnv;
 }
 
-function defaultPermissions(collections) {
+function defaultPermissions(keys) {
     let permissions = {};
-    collections.forEach((permission) => {
+    keys.forEach((permission) => {
         permissions[permission] = {
             create: true,
             read: true,
@@ -55,7 +56,7 @@ async function createTestUser() {
     const mockEnv = await getTestEnv();
     return await mockEnv.withSecurityRulesDisabled(async(context) => {
         const testdoc = context.firestore().collection('users').doc(myAuth.uid);
-        const permissions = defaultPermissions(collections);
+        const permissions = defaultPermissions(permissionKeys);
         const user = {
             id: myAuth.uid,
             email: myAuth.email,
