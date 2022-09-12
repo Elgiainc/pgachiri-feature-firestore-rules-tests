@@ -8,8 +8,8 @@ service cloud.firestore {
     }
      match /courses/{course} {
       allow read: if isAdmin(request, database) || hasReadPermission(request.auth, database, 'courses');
-      allow write: if isAdmin(request, database) || hasWritePermission(request.auth, database, 'courses');
-      allow update: if isAdmin(request, database) || hasUpdatePermission(request.auth, database, 'courses');
+      allow write: if isAdmin(request, database) || hasWritePermission(request.auth, database, 'courses') && courseDataValidated(request);
+      allow update: if isAdmin(request, database) || hasUpdatePermission(request.auth, database, 'courses') && courseDataValidated(request);
       allow delete: if isAdmin(request, database) || hasDeletePermission(request.auth, database, 'courses');
     }
     match /courseChapters/{chapter} {
@@ -59,7 +59,10 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
      match /videoOverlays/{videoOverlay} {
-      allow read, write: if request.auth != null;
+      allow read: if isAdmin(request, database) || hasReadPermission(request.auth, database, 'videos') || resource.data.uploadedBy == request.auth.uid;
+      allow write: if isAdmin(request, database) || hasWritePermission(request.auth, database, 'videos');
+      allow update: if isAdmin(request, database) || hasUpdatePermission(request.auth, database, 'videos');
+      allow delete: if isAdmin(request, database) || hasDeletePermission(request.auth, database, 'videos');
     }
      match /comments/{comment} {
       allow read: if isAdmin(request, database) || hasReadPermission(request.auth, database, 'comments');
@@ -67,17 +70,17 @@ service cloud.firestore {
       allow update: if isAdmin(request, database) || hasUpdatePermission(request.auth, database, 'comments');
       allow delete: if isAdmin(request, database) || hasDeletePermission(request.auth, database, 'comments');
     }
-     match /videoOverlays/{overlay} {
+     match /transcriptInserts/{transcriptInsert} {
       allow read, write: if request.auth != null;
     }
-     match /transcriptInserts/{overlay} {
-      allow read, write: if request.auth != null;
-    }
-    match /transcriptFixes/{transcriptFixes} {
+    match /transcriptFixes/{transcriptFix} {
       allow read, write: if request.auth != null;
     }
     match /userGroups/{userGroups} {
-      allow read, write: if request.auth != null;
+      allow read: if isAdmin(request, database) || hasReadPermission(request.auth, database, 'groups');
+      allow write: if isAdmin(request, database) || hasWritePermission(request.auth, database, 'groups') && groupDataValidated(request);
+      allow update: if isAdmin(request, database) || hasUpdatePermission(request.auth, database, 'groups') && groupDataValidated(request);
+      allow delete: if isAdmin(request, database) || hasDeletePermission(request.auth, database, 'groups');
     }
     match /users/{user} {
       allow read: if isAdmin(request, database) || hasReadPermission(request, database, 'users');
@@ -89,11 +92,16 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
     match /demoRequests/{demoRequests} {
-      allow write: if true;
-      allow read: if request.auth != null;
+      allow read: if isAdmin(request, database) || hasReadPermission(request.auth, database, 'demo-requests');
+      allow write: if isAdmin(request, database) || hasWritePermission(request.auth, database, 'demo-requests');
+      allow update: if isAdmin(request, database) || hasUpdatePermission(request.auth, database, 'demo-requests');
+      allow delete: if isAdmin(request, database) || hasDeletePermission(request.auth, database, 'demo-requests');
     }
     match /bookmarks/{bookmarks} {
-			allow read, write: if request.auth != null;
+      allow read: if isAdmin(request, database) || hasReadPermission(request.auth, database, 'bookmarks');
+      allow write: if isAdmin(request, database) || hasWritePermission(request.auth, database, 'bookmarks');
+      allow update: if isAdmin(request, database) || hasUpdatePermission(request.auth, database, 'bookmarks');
+      allow delete: if isAdmin(request, database) || hasDeletePermission(request.auth, database, 'bookmarks');
     }
     match /verifiedDemoUsers/{verifiedDemoUserId} {
       allow write: if true;
@@ -161,3 +169,10 @@ function userDataValidated(request) {
   return request.resource.data.keys().hasAll(['id', 'name', 'email', 'active', 'groups', 'courses', 'createdAt']);
 }
 
+function groupDataValidated(request) {
+  return request.resource.data.keys().hasAll(['id', 'name', 'description', 'active', 'createdAt', 'createdBy']);
+}
+
+function courseDataValidated(request) {
+  return request.resource.data.keys().hasAll(['name', 'courseCode', 'active', 'uniqueCourseCode']);
+}
