@@ -18,14 +18,14 @@ const myAuth = {
     }
 };
 
-const collections = ['users', 'userGroups', 'comments', 'courses'];
-const permissionKeys = ['admin', 'users', 'groups', 'comments', 'courses'];
+const collections = ['users', 'userGroups', 'comments', 'courses', 'notifications'];
+const permissionKeys = ['admin', 'users', 'groups', 'comments', 'courses', 'notifications'];
 
-beforeEach(async() => {
-    const mockEnv = await getTestEnv();
-    // mockEnv.cleanup()
-    await mockEnv.clearFirestore()
-});
+// beforeEach(async() => {
+//     const mockEnv = await getTestEnv();
+//     // mockEnv.cleanup()
+//     await mockEnv.clearFirestore()
+// });
 
 async function getTestEnv() {
     const testEnv = await initializeTestEnvironment({
@@ -108,8 +108,8 @@ describe("Alinkeo Firestore Rules:", () => {
     });
 });
 
-after(async() => {
-    const mockEnv = await getTestEnv();
-    // mockEnv.cleanup()
-    await mockEnv.clearFirestore()
-});
+// after(async() => {
+//     const mockEnv = await getTestEnv();
+//     // mockEnv.cleanup()
+//     await mockEnv.clearFirestore()
+// });
