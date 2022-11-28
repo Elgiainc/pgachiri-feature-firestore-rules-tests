@@ -10,14 +10,14 @@ service cloud.firestore {
     }
      match /courses/{course} {
       allow read: if isAdmin(request, database, 'courses') || hasReadPermission(request, database, 'courses');
-      allow write: if isAdmin(request, database, 'courses') || hasWritePermission(request, database, 'courses') && courseDataValidated(request);
-      allow update: if isAdmin(request, database, 'courses') || hasUpdatePermission(request, database, 'courses') && courseDataValidated(request);
+      allow write: if (isAdmin(request, database, 'courses') || hasWritePermission(request, database, 'courses')) && courseDataValidated(request);
+      allow update: if (isAdmin(request, database, 'courses') || hasUpdatePermission(request, database, 'courses')) && courseDataValidated(request);
       allow delete: if isAdmin(request, database, 'courses') || hasDeletePermission(request, database, 'courses');
     }
     match /courseChapters/{chapter} {
       allow read: if isAdmin(request, database, 'courses') || hasReadPermission(request, database, 'courses');
-      allow write: if isAdmin(request, database, 'courses') || hasWritePermission(request, database, 'courses') && courseChapterDataValidated(request);
-      allow update: if isAdmin(request, database, 'courses') || hasUpdatePermission(request, database, 'courses') && courseChapterDataValidated(request);
+      allow write: if (isAdmin(request, database, 'courses') || hasWritePermission(request, database, 'courses')) && courseChapterDataValidated(request);
+      allow update: if (isAdmin(request, database, 'courses') || hasUpdatePermission(request, database, 'courses')) && courseChapterDataValidated(request);
       allow delete: if isAdmin(request, database, 'courses') || hasDeletePermission(request, database, 'courses');
     }
     match /notesCategories/{category} {
@@ -39,15 +39,15 @@ service cloud.firestore {
       allow delete: if hasDeletePermission(request, database, 'notes');
     }
     match /videos/{video} {
-      allow read: if isAdmin(request, database, 'videos') || hasReadPermission(request, database, 'videos') || resource.data.uploadedBy == request.auth.uid;
+      allow read: if isAdmin(request, database, 'videos') || hasReadPermission(request, database, 'videos') || isOwnRecord(request, resource.data.uploadedBy);
       allow write: if isAdmin(request, database, 'videos') || hasWritePermission(request, database, 'videos');
       allow update: if isAdmin(request, database, 'videos') || hasUpdatePermission(request, database, 'videos');
       allow delete: if isAdmin(request, database, 'videos') || hasDeletePermission(request, database, 'videos');
     }
       match /Questions/{question} {
       allow read: if hasReadPermission(request, database, 'questions') || hasAnswerPermission(request, database, 'questions');
-      allow write: if hasWritePermission(request, database, 'questions') || hasAnswerPermission(request, database, 'questions') && questionDataValidated(request);
-      allow update: if hasUpdatePermission(request, database, 'questions') || hasAnswerPermission(request, database, 'questions') && questionDataValidated(request);
+      allow write: if (hasWritePermission(request, database, 'questions') || hasAnswerPermission(request, database, 'questions')) && questionDataValidated(request);
+      allow update: if (hasUpdatePermission(request, database, 'questions') || hasAnswerPermission(request, database, 'questions')) && questionDataValidated(request);
       allow delete: if hasDeletePermission(request, database, 'questions');
     }
       match /Answers/{answer} {
@@ -93,13 +93,13 @@ service cloud.firestore {
       allow delete: if hasDeletePermission(request, database, 'groups');
     }
     match /users/{user} {
-      allow read: if hasReadPermission(request, database, 'users');
-      allow write: if hasWritePermission(request, database, 'users') && userDataValidated(request);
-      allow update: if hasUpdatePermission(request, database, 'users') && userDataValidated(request);
-      allow delete: if hasDeletePermission(request, database, 'users');
+      allow read: if isAdmin(request, database, 'users') || hasReadPermission(request, database, 'users');
+      allow write: if (isAdmin(request, database, 'users') || hasWritePermission(request, database, 'users') || userConfirmed(request)) && userDataValidated(request);
+      allow update: if (isAdmin(request, database, 'users') || isPermitted(request, database, resource)) && authUserExists(request, database);
+      allow delete: if isAdmin(request, database, 'users') || hasDeletePermission(request, database, 'users');
     }
     match /userInvites/{userInvites} {
-      allow read: if hasInvitePermission(request, database, 'users');
+      allow read: if hasInvitePermission(request, database, 'users'); 
       allow write: if hasInvitePermission(request, database, 'users');
       allow update: if hasInvitePermission(request, database, 'users');      
       allow delete: if hasDeletePermission(request, database, 'users');      
@@ -162,35 +162,35 @@ service cloud.firestore {
 }
 
 function hasReadPermission(request, database, key) { 
-    return emailConfirmed(request) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.featurePermissions.permissions[key].read == true;
+    return userConfirmed(request) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.featurePermissions.permissions[key].read == true;
 }
 
 function hasWritePermission(request, database, key) {
-    return emailConfirmed(request) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.featurePermissions.permissions[key].create == true;
+    return userConfirmed(request) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.featurePermissions.permissions[key].create == true;
 }
 
 function hasUpdatePermission(request, database, key) {
-    return emailConfirmed(request) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.featurePermissions.permissions[key].update == true;
+    return userConfirmed(request) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.featurePermissions.permissions[key].update == true;
 }
 
 function hasDeletePermission(request, database, key) {
-    return emailConfirmed(request) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.featurePermissions.permissions[key].delete == true;
+    return userConfirmed(request) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.featurePermissions.permissions[key].delete == true;
 }
 
 function hasAnswerPermission(request, database, key) { 
-    return emailConfirmed(request) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.featurePermissions.permissions[key].answer == true;
+    return userConfirmed(request) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.featurePermissions.permissions[key].answer == true;
 }
 
 function hasInvitePermission(request, database, key) { 
-    return emailConfirmed(request) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.featurePermissions.permissions[key].invite == true;
+    return userConfirmed(request) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.featurePermissions.permissions[key].invite == true;
 }
 
-function emailConfirmed(request) {
+function userConfirmed(request) {
     return request.auth != null && request.auth.uid.matches('^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$');
 }
 
 function isAdmin(request, database, key) {
-    return emailConfirmed(request) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.featurePermissions.permissions[key].admin == true;
+    return userConfirmed(request) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.featurePermissions.permissions[key].admin == true;
 }
 
 function userDataValidated(request) {
@@ -230,9 +230,18 @@ function ticketDataValidated(request) {
 }
 
 function notificationDataValidated(request) {
-  return request.resource.data.keys().hasAll(['id', 'description', 'title', 'type', 'active', 'createdAt', 'sourceCollection', 'sourceDocumentId', 'viewed']);
+  return request.resource.data.keys().hasAll(['id', 'description', 'title', 'type', 'active', 'createdAt', 'sourceCollection', 'sourceDocumentId', 'viewed']);  
 }
 
 function authUserExists(request, database) {
-    return emailConfirmed(request) && exists(/databases/$(database)/documents/users/$(request.auth.uid));  
+    return userConfirmed(request) && exists(/databases/$(database)/documents/users/$(request.auth.uid));  
+}
+
+function isPermitted(request, database, resource) {
+  return !request.resource.data.diff(resource.data).affectedKeys()
+        .hasAll(['featurePermissions']) && !request.resource.data.keys().hasAll(['name', 'featurePermissions', 'active']);
+}
+
+function isOwnRecord(request, comparisonKey) {
+  return comparisonKey == request.auth.uid;
 }

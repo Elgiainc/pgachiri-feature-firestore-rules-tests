@@ -44,9 +44,10 @@ function defaultPermissions(keys) {
     keys.forEach((permission) => {
         permissions[permission] = {
             create: true,
-            read: true,
+            read: false,
             update: true,
-            delete: true,
+            delete: false,
+            admin: false,
         }
     })
     return permissions;
@@ -94,9 +95,8 @@ describe("Alinkeo Firestore Rules:", () => {
             const context = mockEnv.authenticatedContext(myAuth.uid, myAuth.custom);
             const testDoc = context.firestore().collection(collection).doc(myAuth.uid);
 
-            return await assertSucceeds(setDoc(testDoc, { id: myAuth.uid, name: 'test name', email: myAuth.email, active: true, groups: [], courses: [], createdAt: '' }));
+            return await assertSucceeds(setDoc(testDoc, { id: myAuth.uid, name: 'test name', email: myAuth.email, active: true, groups: [], courses: [], createdAt: '', featurePermissions: { test: '' }, preferences: {} }));
         });
-
 
         it(`UNauthenticated user CANNOT set a document in ${collection} collection`, async() => {
             const mockEnv = await getTestEnv();
@@ -104,6 +104,14 @@ describe("Alinkeo Firestore Rules:", () => {
             const testDoc = context.firestore().collection(collection).doc(myAuth.uid);
 
             return await assertFails(setDoc(testDoc, { name: 'test name' }));
+        });
+
+        it(`Rewrite of permissions in ${collection} collection fails`, async() => {
+            const mockEnv = await getTestEnv();
+            const context = mockEnv.unauthenticatedContext();
+            const testDoc = context.firestore().collection(collection).doc(myAuth.uid);
+
+            return await assertFails(setDoc(testDoc, { name: 'test name', featurePermissions: '' }));
         });
     });
 });
